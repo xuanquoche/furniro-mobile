@@ -13,7 +13,10 @@ export interface Product {
   quantity: number;
   color: string;
   brand: string;
-  categories: string;
+  categories: {
+    name: string;
+    _id: string;
+  };
   createdBy: {
     id: string;
     email: string;

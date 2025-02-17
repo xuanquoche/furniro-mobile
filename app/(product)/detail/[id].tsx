@@ -1,18 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
-import { AntDesign } from "@expo/vector-icons";
-import { Link, router, useLocalSearchParams } from "expo-router";
 import { fetchWithAuth } from "@/apis";
 import { Product } from "@/types/product";
 import { formatCurrency } from "@/utils/formatNumber";
+import { AntDesign } from "@expo/vector-icons";
+import { Link, router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Button,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import Modal from "react-native-modal";
 import { useToast } from "react-native-toast-notifications";
+import Feather from "@expo/vector-icons/Feather";
 
 const ProductDetailScreen = () => {
   const [size, setSize] = useState(null);
   const [openSize, setOpenSize] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const toast = useToast();
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const modalRef = useRef(null);
 
   const { id } = useLocalSearchParams();
 
@@ -27,7 +40,7 @@ const ProductDetailScreen = () => {
     fetchProduct();
   }, []);
 
-  const handleDelte = async () => {
+  const handleDelete = async () => {
     const response = await fetchWithAuth(`products/${id}`, "DELETE");
     if (response.statusCode !== 200) {
       toast.show("Delete failed", { type: "danger" });
@@ -35,63 +48,172 @@ const ProductDetailScreen = () => {
     router.replace("/(tabs)/home");
   };
 
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
+
   return (
-    <View style={styles.container}>
-      <Image
-        source={{
-          uri: product?.thumbnail,
-        }}
-        style={styles.productImage}
-      />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 70 }}
+    >
+      <Image source={{ uri: product?.thumbnail }} style={styles.productImage} />
 
       <View style={styles.productInfo}>
-        <View style={styles.row}>
-          <DropDownPicker
-            open={openSize}
-            value={size}
-            items={[
-              { label: "S", value: "S" },
-              { label: "M", value: "M" },
-              { label: "L", value: "L" },
-            ]}
-            setOpen={setOpenSize}
-            setValue={setSize}
-            placeholder="Size"
-            style={styles.dropdown}
-          />
-        </View>
-
-        <Text style={styles.brand}>{product?.brand}</Text>
         <Text style={styles.productTitle}>{product?.product_name}</Text>
+        <View style={styles.row}>
+          <Text style={styles.brand}>{product?.brand}</Text>
+          <Text style={styles.sizeText}>{product?.size}</Text>
+        </View>
         <Text style={styles.price}>
           {formatCurrency(
             (product?.original_price ?? 0) -
               ((product?.original_price ?? 0) * (product?.discount ?? 0)) / 100
-          )}
+          )}{" "}
+          $
         </Text>
 
         <View style={styles.rating}>
-          <AntDesign name="star" size={16} color="#FFD700" />
-          <AntDesign name="star" size={16} color="#FFD700" />
-          <AntDesign name="star" size={16} color="#FFD700" />
-          <AntDesign name="star" size={16} color="#FFD700" />
+          {[...Array(4)].map((_, index) => (
+            <AntDesign key={index} name="star" size={16} color="#FFD700" />
+          ))}
           <AntDesign name="staro" size={16} color="#FFD700" />
           <Text style={styles.reviewText}>(10)</Text>
         </View>
 
         <Text style={styles.description}>
-          Short dress in soft cotton jersey with decorative buttons down the
-          front and a wide, frill-trimmed neckline.
+          Built for life and made to last, this full-zip corduroy jacket is part
+          of our Nike Life collection.
         </Text>
 
-        <Link style={styles.addToCartButton} href={`/(product)/edit/${id}`}>
-          <Text style={styles.addToCartText}>Edit</Text>
-        </Link>
-        <TouchableOpacity style={styles.addToCartButton} onPress={handleDelte}>
-          <Text style={styles.addToCartText}>Edit</Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Shipping & Returns</Text>
+        <Text style={styles.description}>
+          Free standard shipping and free 60-day returns.
+        </Text>
+
+        <Text style={styles.sectionTitle}>Reviews</Text>
+        <Text style={styles.reviewScore}>4.5 Ratings</Text>
+        <Text style={styles.reviewCount}>293 Reviews</Text>
+
+        <View style={styles.reviewItem}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-start",
+              marginTop: 10,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: "#eee",
+                padding: 10,
+                borderRadius: 50,
+                justifyContent: "center",
+                marginTop: 10,
+              }}
+            >
+              <AntDesign name="user" size={24} color="#666" />
+            </View>
+            <View style={styles.reviewContent}>
+              <Text style={styles.reviewerName}>Alex Morgan</Text>
+              <View style={styles.reviewStars}>
+                {[...Array(4)].map((_, index) => (
+                  <AntDesign
+                    key={index}
+                    name="star"
+                    size={14}
+                    color="#FFD700"
+                  />
+                ))}
+                <AntDesign name="staro" size={14} color="#FFD700" />
+              </View>
+              <Text style={styles.reviewText}>
+                Gucci introduces its heritage, creativity, and innovation into a
+                plethora of collections.
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              marginTop: 10,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: "#eee",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 50,
+                justifyContent: "center",
+                alignContent: "center",
+                height: 40,
+                marginTop: 10,
+              }}
+            >
+              <AntDesign name="user" size={24} color="#666" />
+            </View>
+            <View style={styles.reviewContent}>
+              <Text style={styles.reviewerName}>Alex Morgan</Text>
+              <View style={styles.reviewStars}>
+                {[...Array(4)].map((_, index) => (
+                  <AntDesign
+                    key={index}
+                    name="star"
+                    size={14}
+                    color="#FFD700"
+                  />
+                ))}
+                <AntDesign name="staro" size={14} color="#FFD700" />
+              </View>
+              <Text style={styles.reviewText}>
+                Gucci introduces its heritage, creativity, and innovation into a
+                plethora of collections.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View>
+          <TouchableOpacity
+            style={styles.addToBagButton}
+            onPress={() => {
+              toast.show("Added to bag", { type: "success" });
+            }}
+          >
+            <Text style={styles.addToBagText}>
+              Add to Bag - $
+              {formatCurrency(
+                (product?.original_price ?? 0) -
+                  ((product?.original_price ?? 0) * (product?.discount ?? 0)) /
+                    100
+              )}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+      <TouchableOpacity onPress={toggleModal} style={styles.moreButton}>
+        <Feather name="more-vertical" size={24} color="black" />
+      </TouchableOpacity>
+
+      <Modal isVisible={isModalVisible} ref={modalRef}>
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={{ flex: 1 }}>
+            <Link style={styles.editButton} href={`/(product)/edit/${id}`}>
+              <Text style={styles.buttonText}>Edit</Text>
+            </Link>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+            >
+              <Text style={styles.buttonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    </ScrollView>
   );
 };
 
@@ -100,7 +222,7 @@ export default ProductDetailScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "white",
   },
   productImage: {
     width: "100%",
@@ -114,15 +236,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  dropdown: {
-    marginBottom: 10,
-  },
   brand: {
     fontSize: 18,
     fontWeight: "bold",
   },
-  productTitle: {
+  sizeText: {
     fontSize: 16,
+    marginRight: 10,
+  },
+  productTitle: {
+    fontSize: 25,
     color: "#666",
   },
   price: {
@@ -144,16 +267,74 @@ const styles = StyleSheet.create({
     color: "#666",
     marginVertical: 5,
   },
-  addToCartButton: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 10,
+  },
+  reviewScore: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 5,
+  },
+  reviewCount: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 10,
+  },
+  reviewItem: {
+    flexDirection: "column",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  reviewContent: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  reviewerName: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  reviewStars: {
+    flexDirection: "row",
+    marginVertical: 3,
+  },
+  editButton: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  deleteButton: {
     backgroundColor: "red",
     padding: 12,
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
   },
-  addToCartText: {
+  addToBagButton: {
+    backgroundColor: "#6A0DAD",
+    padding: 14,
+    borderRadius: 50,
+    alignItems: "center",
+    marginTop: 15,
+  },
+  addToBagText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  moreButton: {
+    padding: 10,
+    position: "absolute",
+    top: 10,
+    right: 10,
   },
 });

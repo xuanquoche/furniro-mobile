@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { View, ScrollView, Image } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  Text,
+} from "react-native";
 import { TextInput, Button, HelperText, Card } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import { fetchWithAuth } from "@/apis";
 import { router, useLocalSearchParams } from "expo-router";
+import { Modalize } from "react-native-modalize";
+import { addImage } from "@/apis/add-image";
 
 export default function AddProductScreen() {
   const [product, setProduct] = useState({
@@ -12,22 +21,20 @@ export default function AddProductScreen() {
     product_description: "",
     categories: "",
     images: [] as (string | undefined)[],
-    size: 0 as 0 | 1 | 2,
+    size: "S",
     color: "",
     brand: "",
     thumbnail: "" as string | undefined,
     quantity: 0 as number,
-    original_price: 0 as number,
+    original_price: 0,
     discount: 0 as number,
     status: 0 as number,
   });
 
-  const { id } = useLocalSearchParams();
-
   const statusOptions = [
-    { label: "Draft", value: 0 },
-    { label: "Published", value: 1 },
-    { label: "Out of Stock", value: 2 },
+    { label: "Draft", value: "DRAFT" },
+    { label: "Published", value: "PUBLISHED" },
+    { label: "Out of Stock", value: "OUT_OF_STOCK" },
   ];
 
   const categoriesOptions = [
@@ -37,27 +44,23 @@ export default function AddProductScreen() {
   ];
 
   const sizeOptions = [
-    { label: "Small", value: 0 },
-    { label: "Medium", value: 1 },
-    { label: "Large", value: 2 },
+    { label: "S", value: "S" },
+    { label: "M", value: "M" },
+    { label: "L", value: "L" },
+    { label: "XL", value: "XL" },
   ];
 
-  useEffect(() => {
-    if (id) {
-      const fetchProduct = async () => {
-        const response = await fetchWithAuth(`products/${id}`, "GET");
-        console.log("fetch data", response.data);
-
-        if (response.statusCode === 200) {
-          setProduct(response.data);
-        }
-      };
-      fetchProduct();
-    }
-  }, [id]);
+  const colors = [
+    { name: "Orange", code: "#FFA500" },
+    { name: "Black", code: "#000000" },
+    { name: "Red", code: "#FF0000" },
+    { name: "Yellow", code: "#FFD700" },
+    { name: "Blue", code: "#0000FF" },
+  ];
 
   const handleSubmit = async () => {
     const response = await fetchWithAuth("products", "POST", product);
+    console.log("product values", product);
     if (response.statusCode === 201) {
       router.replace("/(tabs)/home");
     }
@@ -88,11 +91,20 @@ export default function AddProductScreen() {
     });
 
     if (!result.canceled) {
+      const thumbnailFetch = await addImage({
+        body: { file: result.assets[0].uri },
+      });
       setProduct((prev) => ({
         ...prev,
-        thumbnail: result.assets[0].uri,
+        thumbnail: thumbnailFetch.data.filePath,
       }));
     }
+  };
+
+  const modalizeRef = useRef<Modalize>(null);
+
+  const openModal = () => {
+    modalizeRef.current?.open();
   };
   return (
     <ScrollView
@@ -114,23 +126,6 @@ export default function AddProductScreen() {
         mode="outlined"
         multiline
       />
-
-      <View style={{ marginVertical: 10 }}>
-        <Picker
-          selectedValue={product.categories}
-          onValueChange={(value) =>
-            setProduct({ ...product, categories: value })
-          }
-        >
-          {categoriesOptions.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
-      </View>
 
       <Button
         mode="contained"
@@ -165,27 +160,66 @@ export default function AddProductScreen() {
         ))}
       </ScrollView>
 
-      <View style={{ marginVertical: 10 }}>
-        <Picker
-          selectedValue={product.size}
-          onValueChange={(value) => setProduct({ ...product, size: value })}
-        >
-          {sizeOptions.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
-      </View>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View style={{ flexDirection: "row" }}>
+          <View
+            style={{
+              backgroundColor: product.color,
+              width: 50,
+              height: 50,
+              borderRadius: 50,
+              marginRight: 50,
+            }}
+          ></View>
+          <TouchableOpacity
+            onPress={openModal}
+            style={{ padding: 15, backgroundColor: "#6200EE", borderRadius: 5 }}
+          >
+            <Text style={{ color: "#fff", fontSize: 16 }}>Choose Color</Text>
+          </TouchableOpacity>
+        </View>
 
-      <TextInput
-        label="Color"
-        value={product.color}
-        onChangeText={(text) => setProduct({ ...product, color: text })}
-        mode="outlined"
-      />
+        <Modalize
+          ref={modalizeRef}
+          adjustToContentHeight
+          childrenStyle={{ height: 370 }}
+        >
+          <View style={{ padding: 20 }}>
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+            >
+              Color
+            </Text>
+            {colors.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 10,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#ddd",
+                }}
+                onPress={() => {
+                  setProduct({ ...product, color: item.code });
+                  modalizeRef.current?.close();
+                }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: item.code,
+                    borderRadius: 10,
+                    marginRight: 10,
+                  }}
+                />
+                <Text style={{ fontSize: 16 }}>{item.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Modalize>
+      </View>
 
       <TextInput
         label="Brand"
@@ -225,11 +259,46 @@ export default function AddProductScreen() {
       />
 
       <View style={{ marginVertical: 10 }}>
+        <Text style={{ fontWeight: "semibold", fontSize: 18 }}>Status</Text>
         <Picker
           selectedValue={product.status}
           onValueChange={(value) => setProduct({ ...product, status: value })}
         >
           {statusOptions.map((option) => (
+            <Picker.Item
+              key={option.value}
+              label={option.label}
+              value={option.value}
+            />
+          ))}
+        </Picker>
+      </View>
+      <View style={{ marginVertical: 10 }}>
+        <Text style={{ fontWeight: "semibold", fontSize: 18 }}>
+          Pick Category
+        </Text>
+        <Picker
+          selectedValue={product.categories}
+          onValueChange={(value) =>
+            setProduct({ ...product, categories: value })
+          }
+        >
+          {categoriesOptions.map((option) => (
+            <Picker.Item
+              key={option.value}
+              label={option.label}
+              value={option.value}
+            />
+          ))}
+        </Picker>
+      </View>
+      <View style={{ marginVertical: 10 }}>
+        <Text style={{ fontWeight: "semibold", fontSize: 18 }}>Pick Size</Text>
+        <Picker
+          selectedValue={product.size}
+          onValueChange={(value) => setProduct({ ...product, size: value })}
+        >
+          {sizeOptions.map((option) => (
             <Picker.Item
               key={option.value}
               label={option.label}

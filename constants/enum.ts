@@ -1,11 +1,12 @@
 export enum Size {
-  SMALL,
-  MEDIUM,
-  LARGE,
+  S = "S",
+  M = "M",
+  L = "L",
+  XL = "XL",
 }
 
 export enum Status {
-  DRAFT,
-  PUBLISHED,
-  OUT_OF_STOCK,
+  DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
+  OUT_OF_STOCK = "OUT_OF_STOCK",
 }

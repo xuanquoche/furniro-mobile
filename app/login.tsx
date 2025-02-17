@@ -15,6 +15,7 @@ import { customFetch } from "@/apis";
 import { useAuthStore } from "@/store/useAuthStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, Redirect, router } from "expo-router";
+import { Toast } from "react-native-toast-notifications";
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState("");
@@ -50,6 +51,8 @@ const LoginScreen = ({ navigation }: any) => {
         await AsyncStorage.setItem("access_token", response.data.access_token);
         router.replace("/(tabs)/home");
       }
+    } else {
+      Toast.show("Invalid email", { type: "danger" });
     }
   };
   return (
@@ -62,7 +65,6 @@ const LoginScreen = ({ navigation }: any) => {
     >
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Image source={require("../assets/images/logo.png")} />
-        <Text>Login</Text>
       </View>
       <View style={{ flex: 1 }}>
         <InputComponent

@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 const ProductList = () => {
@@ -18,6 +19,7 @@ const ProductList = () => {
       const response = await fetchWithAuth("products", "GET");
       if (response.statusCode === 200) {
         setProducts(response.data.result);
+        console.log("fetch product", response.data.result);
       }
     };
     fetchData();
@@ -54,7 +56,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   card: {
-    width: "48%",
+    width: "47%",
     margin: 5,
     backgroundColor: "#fff",
     borderRadius: 10,

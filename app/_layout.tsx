@@ -7,6 +7,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import SplashScreen from "./splash";
 import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -35,13 +36,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ToastProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(product)" options={{ headerShown: true }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ToastProvider>
+    <GestureHandlerRootView>
+      <ToastProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(product)" options={{ headerShown: true }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </ToastProvider>
+    </GestureHandlerRootView>
   );
 }

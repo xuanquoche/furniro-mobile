@@ -78,7 +78,7 @@ const CategoryList = () => {
   const [selectedId, setSelectedId] = useState<string>();
 
   const renderItem = ({ item }: { item: ItemData }) => {
-    const backgroundColor = item.id === selectedId ? "#6e3b6e" : "#f9c2ff";
+    const backgroundColor = item.id === selectedId ? "#CFCFCF" : "#E8E8E8";
     const color = item.id === selectedId ? "white" : "black";
 
     return (
@@ -107,15 +107,20 @@ const CategoryList = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    width: "100%",
+  },
   item: {
     padding: 10,
     marginVertical: 8,
     marginHorizontal: 8,
     borderRadius: 20,
+    width: 120,
+    textAlign: "center",
   },
   title: {
-    fontSize: 12,
+    fontSize: 18,
+    textAlign: "center",
   },
 });
 

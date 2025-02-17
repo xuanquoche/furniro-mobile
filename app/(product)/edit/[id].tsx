@@ -27,9 +27,9 @@ export default function UpdateProductScreen() {
   const { id } = useLocalSearchParams();
 
   const statusOptions = [
-    { label: "Draft", value: 0 },
-    { label: "Published", value: 1 },
-    { label: "Out of Stock", value: 2 },
+    { label: "Draft", value: "DRAFT" },
+    { label: "Published", value: "PUBLISHED" },
+    { label: "Out of Stock", value: "OUT_OF_STOCK" },
   ];
 
   const categoriesOptions = [
@@ -39,20 +39,30 @@ export default function UpdateProductScreen() {
   ];
 
   const sizeOptions = [
-    { label: "Small", value: 0 },
-    { label: "Medium", value: 1 },
-    { label: "Large", value: 2 },
+    { label: "S", value: "S" },
+    { label: "M", value: "M" },
+    { label: "L", value: "L" },
+    { label: "XL", value: "XL" },
+  ];
+
+  const colors = [
+    { name: "Orange", code: "#FFA500" },
+    { name: "Black", code: "#000000" },
+    { name: "Red", code: "#FF0000" },
+    { name: "Yellow", code: "#FFD700" },
+    { name: "Blue", code: "#0000FF" },
   ];
 
   useEffect(() => {
-    console.log("id", id);
     if (id) {
       const fetchProduct = async () => {
         const response = await fetchWithAuth(`products/${id}`, "GET");
-        console.log("fetch data", response.data);
 
         if (response.statusCode === 200) {
-          setProduct(response.data);
+          setProduct({
+            ...response.data,
+            categories: response.data.categories._id,
+          });
         }
       };
       fetchProduct();
@@ -61,8 +71,10 @@ export default function UpdateProductScreen() {
 
   const handleSubmit = async () => {
     const response = await fetchWithAuth(`products/${id}`, "PATCH", product);
+    console.log("response", response);
     if (response.statusCode !== 200) {
       toast.show("Hello World", { type: "danger" });
+      return;
     }
     router.replace(`/(product)/detail/${id}`);
   };
